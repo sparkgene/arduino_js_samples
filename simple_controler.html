@@ -1,0 +1,187 @@
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>simple controller</title>
+  <style type="text/css">
+  body {
+    text-align: center;
+  }
+  .btn {
+    background-image: -moz-linear-gradient(top, #3498db, #2980b9);
+    font-family: Arial;
+    color: #ffffff;
+    font-size: 20px;
+    padding: 10px 20px 10px 20px;
+    text-decoration: none;
+    width: 180px;
+    height: 50px;
+  }
+  .btn:hover {
+    background-image: -moz-linear-gradient(top, #3cb0fd, #3498db);
+    text-decoration: none;
+  }
+  </style>
+  <script type="text/javascript">
+    var DRIVER1_IN1 = 6;   // ドライバ１
+    var DRIVER1_IN2 = 7;   // ドライバ１
+    var DRIVER1_VREF = 3;  // ドライバ１
+    var DRIVER2_IN1 = 8;   // ドライバ２
+    var DRIVER2_IN2 = 9;   // ドライバ２
+    var DRIVER2_VREF = 5;  // ドライバ２
+    var LOW = 0;           // OFF
+    var HIGH = 1;          // ON
+    var SPEED_FAST = 255;
+    var SPEED_SLOW = 192;
+    var arduino = null;
+
+    //
+    // セットアップ
+    //
+    function setup()
+    {
+      if (! document.arduino) {
+        alert('arduino plug-inをインストールして下さい');
+        return;
+      }
+      if( arduino ){
+        arduino.close();
+        arduino = null;
+      }
+      arduino = document.arduino;
+      try{
+
+        arduino.open("/dev/cu.usbmodemfd121");
+      }
+      catch (e){
+        alert("arduinoとの接続に問題が有ります")
+        console.log(e);
+        arduino = null;
+        return;
+      }
+      // pinMode(pin_number, true: OUTPUT, false:INPUT)
+      arduino.pinMode(DRIVER1_IN1, true);
+      arduino.pinMode(DRIVER1_IN2, true);
+      arduino.pinMode(DRIVER2_IN1, true);
+      arduino.pinMode(DRIVER2_IN2, true);
+
+      console.log('setup done');
+    }
+
+    //
+    // 接続確認
+    //
+    function is_connected(){
+      if (arduino == null && arduino == undefined){
+        alert('Setupをして下さい');
+        return false;
+      }
+      console.log('connected');
+      return true;
+    }
+
+    function set_speed(){
+      element = document.getElementById('speed_fast');
+      if (element.checked){
+        arduino.analogWrite(DRIVER1_VREF, SPEED_FAST);
+        arduino.analogWrite(DRIVER2_VREF, SPEED_FAST);
+      }
+      else{
+        arduino.analogWrite(DRIVER1_VREF, SPEED_SLOW);
+        arduino.analogWrite(DRIVER2_VREF, SPEED_SLOW);
+      }
+    }
+    //
+    // 前進
+    //
+    function forward()
+    {
+      if (!is_connected()) {return;}
+      console.log('forward');
+      arduino.digitalWrite(DRIVER1_IN1, HIGH);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, HIGH);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+      set_speed();
+    }
+
+    //
+    // 後退
+    //
+    function backward()
+    {
+      if (!is_connected()) {return;}
+      console.log('backward');
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, HIGH);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+      set_speed();
+    }
+
+    //
+    // 右旋回
+    //
+    function left()
+    {
+      if (!is_connected()) {return;}
+      console.log('right');
+      arduino.digitalWrite(DRIVER1_IN1, HIGH);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+      set_speed();
+    }
+
+    //
+    // 左旋回
+    //
+    function right()
+    {
+      if (!is_connected()) {return;}
+      console.log('left');
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, HIGH);
+      arduino.digitalWrite(DRIVER2_IN1, HIGH);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+      set_speed();
+    }
+
+    //
+    // 停止
+    //
+    function stop()
+    {
+      if (!is_connected()) {return;}
+      console.log('stop');
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+    }
+  </script>
+</head>
+<body>
+  <div class="contents">
+    <div style="margin: 30px">
+      <button type="button" onClick="setup()" class="btn">セットアップ</button>
+    </div>
+    <div>
+      <button onClick="forward()" class="btn">前進</button>
+    </div>
+    <div style="margin: 20px">
+      <button onClick="left()" class="btn">左</button>
+      <button onClick="right()" class="btn">右</button>
+    </div>
+    <div>
+      <button onClick="backward()" class="btn">後退</button>
+    </div>
+    <div style="margin: 30px">
+      <button onClick="stop()" class="btn">停止</button>
+    </div>
+    <div style="margin: 30px">
+      <label><input type="radio" id="speed_fast" name="speed">高速</label>
+      <label><input type="radio" id="speed_slow" name="speed" checked>低速</label>
+    </div>
+  </div>
+</body>
+</html>

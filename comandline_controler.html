@@ -1,0 +1,341 @@
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>comandline controller</title>
+  <style type="text/css">
+  body {
+    padding: 0px;
+    margin: 0px;
+    background: #000000;
+    color: #FFFFFF;
+  }
+  @keyframes blink {
+    75% { opacity: 0.0; }
+  }
+  .terminal{
+    width:100%;
+    height:100%;
+    margin-left: 5px;
+  }
+  .command_text{
+    position: absolute;
+    left: -10000px;
+    background: #FFFFFF;
+    color:black;
+  }
+  .command_history {
+    white-space:pre-wrap;
+    word-wrap:break-word;
+  }
+  .line_header {
+    color: green;
+  }
+  .command_line {
+    width: 100%;
+    background: #000000;
+    border:none;
+    color: #FFFFFF;
+  }
+  .line_cursor {
+    animation: blink 1s step-end infinite;
+  }
+  .history_error {
+    color: red;
+  }
+  </style>
+
+  <script type="text/javascript">
+    var DRIVER1_IN1 = 6;   // ドライバ１
+    var DRIVER1_IN2 = 7;   // ドライバ１
+    var DRIVER1_VREF = 3;  // ドライバ１
+    var DRIVER2_IN1 = 8;   // ドライバ２
+    var DRIVER2_IN2 = 9;   // ドライバ２
+    var DRIVER2_VREF = 5;  // ドライバ２
+    var LOW = 0;           // OFF
+    var HIGH = 1;          // ON
+    var SPEED_FAST = 255;
+    var SPEED_SLOW = 192;
+    var arduino = null;
+
+    //
+    // セットアップ
+    //
+    function setup()
+    {
+      if (! document.arduino) {
+        add_history('arduino plug-inをインストールして下さい');
+        return false;
+      }
+      if( arduino ){
+        arduino.close();
+        arduino = null;
+      }
+      arduino = document.arduino;
+      try{
+
+        arduino.open("/dev/cu.usbmodemfd121");
+      }
+      catch (e){
+        add_history("arduinoとの接続に問題が有ります")
+        console.log(e);
+        arduino = null;
+        return false;
+      }
+      // pinMode(pin_number, true: OUTPUT, false:INPUT)
+      arduino.pinMode(DRIVER1_IN1, true);
+      arduino.pinMode(DRIVER1_IN2, true);
+      arduino.pinMode(DRIVER2_IN1, true);
+      arduino.pinMode(DRIVER2_IN2, true);
+
+      console.log('setup done');
+      return true;
+    }
+
+    //
+    // 接続確認
+    //
+    function is_connected(){
+      if (arduino == null && arduino == undefined){
+        alert('Setupをして下さい');
+        return false;
+      }
+      console.log('connected');
+      return true;
+    }
+
+    function set_speed(){
+      arduino.analogWrite(DRIVER1_VREF, SPEED_SLOW);
+      arduino.analogWrite(DRIVER2_VREF, SPEED_SLOW);
+    }
+    //
+    // 前進
+    //
+    function forward()
+    {
+      if (!is_connected()) {return false;}
+      console.log('forward');
+      arduino.digitalWrite(DRIVER1_IN1, HIGH);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, HIGH);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+      return true;
+    }
+
+    //
+    // 後退
+    //
+    function backward()
+    {
+      if (!is_connected()) {return false;}
+      console.log('backward');
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, HIGH);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+      return true;
+    }
+
+    //
+    // 右旋回
+    //
+    function left()
+    {
+      if (!is_connected()) {return false;}
+      console.log('left');
+      arduino.digitalWrite(DRIVER1_IN1, HIGH);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+      return true;
+    }
+
+    //
+    // 左旋回
+    //
+    function right()
+    {
+      if (!is_connected()) {return false;}
+      console.log('right');
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, HIGH);
+      arduino.digitalWrite(DRIVER2_IN1, HIGH);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+      return true;
+    }
+
+    //
+    // 停止
+    //
+    function stop()
+    {
+      if (!is_connected()) {return false;}
+      console.log('stop');
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+      return true;
+    }
+  </script>
+
+  <script type="text/javascript">
+  /*
+   * 毎回document.querySelectorAllと書くと長いので
+   * jquery風に$(selector)でnodeを取得できるようにしている
+  */
+  function $(selector){
+    var elm = document.querySelectorAll(selector);
+    if( elm.length == 1)
+      return elm[0];
+    return elm;
+  }
+  /*
+   * 表示の初期化
+  */
+  function init(){
+    $('.command_text').value="";
+    var history_node = $('.command_history');
+    while (history_node.hasChildNodes()) {
+      history_node.removeChild(history_node.firstChild);
+    }
+  }
+
+  /*
+   * 入力されたコマンドに一致する物があれば実行する
+  */
+  function detect_function(command){
+    switch (command){
+      case 'setup':
+        if (setup() ){
+          add_history('>> arduino connected successfully');
+        }
+        else{
+          show_error();
+        }
+        break;
+      case 'forward':
+        if (forward() ){
+          add_history('>> move forward');
+        }
+        else{
+          show_error();
+        }
+        break;
+      case 'backward':
+        if (backward() ){
+          add_history('>> move backward');
+        }
+        else{
+          show_error();
+        }
+        break;
+      case 'left':
+        if (left() ){
+          add_history('>> turn left');
+        }
+        else{
+          show_error();
+        }
+        break;
+      case 'right':
+        if (right() ){
+          add_history('>> turn right');
+        }
+        else{
+          show_error();
+        }
+        break;
+      case 'stop':
+        if (stop() ){
+          add_history('>> stop');
+        }
+        else{
+          show_error();
+        }
+        break;
+      case 'clear':
+        init();
+        break;
+      case 'help':
+        show_help();
+        break;
+    }
+  }
+
+  /*
+   * エラーメッセージを表示する
+  */
+  function show_error(){
+    add_history('<span class="history_error">### command faild!</span>');
+  }
+
+  /*
+   * ヘルプを表示する
+  */
+  function show_help(){
+    add_history('usage:');
+    add_history('  setup     : arduinoと接続します');
+    add_history('  forward   : 前に進みます');
+    add_history('  backward  : 後ろに進みます');
+    add_history('  right     : 前に進みます');
+    add_history('  left      : 前に進みます');
+    add_history('  stop      : 停止します');
+    add_history('  clear     : 画面をクリアします');
+  }
+
+  /*
+   * 履歴にコマンドを表示する
+  */
+  function add_history(texts){
+    var history_elm = $('.command_history');
+    history_elm.innerHTML = history_elm.innerHTML + '<div><label class="line_header">root@arduino: </label><span> ' + texts + '</span></div>';
+    window.scrollTo(0,document.body.scrollHeight);
+  }
+
+  function addListener(){
+    $('.terminal').addEventListener(
+      'click', function(){
+        $('.command_text').focus();
+      }, true
+    );
+
+    $('.command_text').addEventListener(
+      'keyup', function(event){
+        console.log(event);
+        switch (event.keyCode){
+          case 8: // backspace
+            var org = $('.line_input').textContent;
+            if(org == undefined || org.length <= 0){
+              return;
+            }
+            $('.line_input').textContent = org.substr(0, org.length-1);
+            return;
+          case 13:
+            var input_elm = $('.line_input');
+            var command = input_elm.textContent;
+            add_history(command);
+            detect_function(command);
+            input_elm.textContent = "";
+            return;
+        }
+        var line_input = $('.line_input');
+        line_input.textContent = line_input.textContent + "" + event.target.value;
+        $('.command_text').value = "";
+      }, true
+    );
+  }
+  </script>
+
+</head>
+
+<body onload="addListener()">
+<div class="terminal">
+  <div class="command_history"></div>
+  <input type="text" class="command_text"></input>
+  <div class="command_line">
+    <label class="line_header">root@arduino: </label>
+    <span class="line_input"></span><span class="line_cursor">|</span>
+  </div>
+</div>
+</body>
+</html>

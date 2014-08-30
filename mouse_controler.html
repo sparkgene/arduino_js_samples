@@ -1,0 +1,250 @@
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>mouse controller</title>
+  <style type="text/css">
+  body {
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    background: #000000;
+  }
+  div .area{
+    background: #E8E8E8;
+  }
+  div .area.top{
+    float:left;
+    width:100%;
+    height:25%;
+  }
+  div .area.top:hover{
+    background: #D1D1D1;
+  }
+  div .area.left{
+    float:left;
+    width:40%;
+    height:50%;
+  }
+  div .area.left:hover{
+    background: #D1D1D1;
+  }
+  div .area.middle{
+    float:left;
+    width:20%;
+    height:50%;
+    background: #FFFFFF;
+  }
+  div .area.middle:hover{
+    cursor: pointer;
+  }
+  div .area.right{
+    float:left;
+    width:40%;
+    height:50%;
+  }
+  div .area .right:hover{
+    background: #D1D1D1;
+  }
+  div .area.bottom{
+    clear:both;
+    width:100%;
+    height:25%;
+  }
+  div .area.bottom:hover{
+    background: #D1D1D1;
+  }
+  </style>
+  <script type="text/javascript">
+    var DRIVER1_IN1 = 6;   // ドライバ１
+    var DRIVER1_IN2 = 7;   // ドライバ１
+    var DRIVER1_VREF = 3;  // ドライバ１
+    var DRIVER2_IN1 = 8;   // ドライバ２
+    var DRIVER2_IN2 = 9;   // ドライバ２
+    var DRIVER2_VREF = 5;  // ドライバ２
+    var LOW = 0;           // OFF
+    var HIGH = 1;          // ON
+    var SPEED_FAST = 255;
+    var SPEED_SLOW = 192;
+    var arduino = null;
+
+    //
+    // セットアップ
+    //
+    function setup()
+    {
+      if (! document.arduino) {
+        alert('arduino plug-inをインストールして下さい');
+        return;
+      }
+      if( arduino ){
+        arduino.close();
+        arduino = null;
+      }
+      arduino = document.arduino;
+      try{
+
+        arduino.open("/dev/cu.usbmodemfd121");
+      }
+      catch (e){
+        alert("arduinoとの接続に問題が有ります")
+        console.log(e);
+        arduino = null;
+        return;
+      }
+      // pinMode(pin_number, true: OUTPUT, false:INPUT)
+      arduino.pinMode(DRIVER1_IN1, true);
+      arduino.pinMode(DRIVER1_IN2, true);
+      arduino.pinMode(DRIVER2_IN1, true);
+      arduino.pinMode(DRIVER2_IN2, true);
+
+      console.log('setup done');
+    }
+
+    //
+    // 接続確認
+    //
+    function is_connected(){
+      if (arduino == null && arduino == undefined){
+        console.log('do setup');
+        return false;
+      }
+      console.log('connected');
+      return true;
+    }
+
+    function set_speed(){
+      arduino.analogWrite(DRIVER1_VREF, SPEED_FAST);
+      arduino.analogWrite(DRIVER2_VREF, SPEED_FAST);
+    }
+    //
+    // 前進
+    //
+    function forward()
+    {
+      if (!is_connected()) {return;}
+      console.log('forward');
+      arduino.digitalWrite(DRIVER1_IN1, HIGH);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, HIGH);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+      set_speed();
+    }
+
+    //
+    // 後退
+    //
+    function backward()
+    {
+      if (!is_connected()) {return;}
+      console.log('backward');
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, HIGH);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+      set_speed();
+    }
+
+    //
+    // 右旋回
+    //
+    function left()
+    {
+      if (!is_connected()) {return;}
+      console.log('right');
+      arduino.digitalWrite(DRIVER1_IN1, HIGH);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+      set_speed();
+    }
+
+    //
+    // 左旋回
+    //
+    function right()
+    {
+      if (!is_connected()) {return;}
+      console.log('left');
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, HIGH);
+      arduino.digitalWrite(DRIVER2_IN1, HIGH);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+      set_speed();
+    }
+
+    //
+    // 停止
+    //
+    function stop()
+    {
+      if (!is_connected()) {return;}
+      console.log('stop');
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+    }
+
+    function addListener(){
+      document.querySelector('.area_top').addEventListener(
+        'mouseover',
+        function(){
+          console.log('top');
+          forward();
+        }, true
+      );
+      document.querySelector('.area_left').addEventListener(
+        'mouseover', function(){
+          console.log('left');
+          left();
+        }, true
+      );
+      document.querySelector('.area_middle').addEventListener(
+        'click', function(e){
+          console.log('clicked');
+          if (!is_connected()) {
+            setup();
+            e.target.textContent = "クリックで終了";
+            return;
+          }
+          else{
+            stop();
+            arduino.close();
+            arduino = null;
+            e.target.textContent = "クリックで起動";
+          }
+        }, true
+      );
+      document.querySelector('.area_middle').addEventListener(
+        'mouseover', function(){
+          console.log('middle');
+          stop();
+        }, true
+      );
+      document.querySelector('.area_right').addEventListener(
+        'mouseover', function(){
+          console.log('right');
+          right();
+        }, true
+      );
+      document.querySelector('.area_bottom').addEventListener(
+        'mouseover', function(){
+          console.log('bottom');
+          backward();
+        }, true
+      );
+    };
+  </script>
+</head>
+<body onload="addListener()">
+  <div class="contents">
+    <div class="area top">マウスをここに移動すると前進します</div>
+    <div>
+      <div class="area left">マウスをここに移動すると左に旋回します</div>
+      <div class="area middle">クリックで起動</div>
+      <div class="area right">マウスをここに移動すると右に旋回します</div>
+    </div>
+    <div class="area bottom">マウスをここに移動すると後退します</div>
+  </div>
+</body>
+</html>
