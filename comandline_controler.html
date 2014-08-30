@@ -136,30 +136,30 @@
     }
 
     //
-    // 右旋回
+    // 左旋回
     //
     function left()
     {
       if (!is_connected()) {return false;}
       console.log('left');
-      arduino.digitalWrite(DRIVER1_IN1, HIGH);
-      arduino.digitalWrite(DRIVER1_IN2, LOW);
-      arduino.digitalWrite(DRIVER2_IN1, LOW);
-      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, HIGH);
+      arduino.digitalWrite(DRIVER2_IN1, HIGH);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
       return true;
     }
 
     //
-    // 左旋回
+    // 右旋回
     //
     function right()
     {
       if (!is_connected()) {return false;}
       console.log('right');
-      arduino.digitalWrite(DRIVER1_IN1, LOW);
-      arduino.digitalWrite(DRIVER1_IN2, HIGH);
-      arduino.digitalWrite(DRIVER2_IN1, HIGH);
-      arduino.digitalWrite(DRIVER2_IN2, LOW);
+      arduino.digitalWrite(DRIVER1_IN1, HIGH);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, HIGH);
       return true;
     }
 

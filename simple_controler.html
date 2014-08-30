@@ -119,23 +119,9 @@
     }
 
     //
-    // 右旋回
-    //
-    function left()
-    {
-      if (!is_connected()) {return;}
-      console.log('right');
-      arduino.digitalWrite(DRIVER1_IN1, HIGH);
-      arduino.digitalWrite(DRIVER1_IN2, LOW);
-      arduino.digitalWrite(DRIVER2_IN1, LOW);
-      arduino.digitalWrite(DRIVER2_IN2, HIGH);
-      set_speed();
-    }
-
-    //
     // 左旋回
     //
-    function right()
+    function left()
     {
       if (!is_connected()) {return;}
       console.log('left');
@@ -143,6 +129,20 @@
       arduino.digitalWrite(DRIVER1_IN2, HIGH);
       arduino.digitalWrite(DRIVER2_IN1, HIGH);
       arduino.digitalWrite(DRIVER2_IN2, LOW);
+      set_speed();
+    }
+
+    //
+    // 右旋回
+    //
+    function right()
+    {
+      if (!is_connected()) {return;}
+      console.log('right');
+      arduino.digitalWrite(DRIVER1_IN1, HIGH);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, HIGH);
       set_speed();
     }
 
