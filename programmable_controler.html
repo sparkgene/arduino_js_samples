@@ -1,0 +1,474 @@
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>simple controller</title>
+  <style type="text/css">
+  body {
+    text-align: center;
+  }
+  .btn {
+    background-image: -moz-linear-gradient(top, #3498db, #2980b9);
+    font-family: Arial;
+    color: #ffffff;
+    font-size: 20px;
+    padding: 5px 10px;
+    text-decoration: none;
+    width: 100px;
+    height: 40px;
+  }
+  .btn:hover {
+    background-image: -moz-linear-gradient(top, #3cb0fd, #3498db);
+    text-decoration: none;
+  }
+  .btn[disabled] {
+      background:  #aaaaaa;
+  }
+  .btn-add {
+    background-image: -moz-linear-gradient(top, #bcc1ca, #9298a1);
+    font-family: Arial;
+    color: #ffffff;
+    font-size: 20px;
+    padding: 5px 10px;
+    text-decoration: none;
+    width: 100px;
+    height: 40px;
+  }
+  .btn-add:hover {
+    background-image: -moz-linear-gradient(top, #cdd5e3, #bcc1ca);
+    text-decoration: none;
+  }
+  .btn-run {
+    background-image: -moz-linear-gradient(top, #4bd222, #4aa12f);
+    font-family: Arial;
+    color: #ffffff;
+    font-size: 20px;
+    padding: 5px 10px;
+    text-decoration: none;
+    width: 100px;
+    height: 40px;
+  }
+  .btn-run:hover {
+    background-image: -moz-linear-gradient(top, #87f664, #4bd222);
+    text-decoration: none;
+  }
+  .btn-stop {
+    background-image: -moz-linear-gradient(top, #262a32, #1f2022);
+    font-family: Arial;
+    color: #ffffff;
+    font-size: 20px;
+    padding: 5px 10px;
+    text-decoration: none;
+    width: 100px;
+    height: 40px;
+  }
+  .btn-stop:hover {
+    background-image: -moz-linear-gradient(top, #434344, #262a32);
+    text-decoration: none;
+  }
+
+  input {
+    font-size: 15px;
+  }
+
+  /* コマンドコントロール用 */
+  .wrapper {
+    padding: 5px;
+    margin:5px;
+  }
+  .active {
+    background-color: #dae6ff;
+  }
+  .time_label {
+    margin: 0px 5px 0px 3px;
+  }
+  input.time {
+    width: 50px;
+    text-align: right;
+  }
+  select {
+    -moz-appearance: button;
+    appearance: button;
+    -moz-border-radius:5px;
+    border-radius:5px;
+    padding: 5px 10px;
+  }
+  .remove {
+    background-image: -moz-linear-gradient(top, #ee103a, #db2e56);
+    font-size: 12px;
+    padding: 3px 5px;
+    margin-left:20px;
+    width: 50px;
+    height: 30px;
+  }
+  .remove:hover {
+    background-image: -moz-linear-gradient(top, #ff0000, #ee103a);
+    text-decoration: none;
+  }
+
+  </style>
+  <script type="text/javascript">
+    var DRIVER1_IN1 = 6;   // ドライバ１
+    var DRIVER1_IN2 = 7;   // ドライバ１
+    var DRIVER1_VREF = 3;  // ドライバ１
+    var DRIVER2_IN1 = 8;   // ドライバ２
+    var DRIVER2_IN2 = 9;   // ドライバ２
+    var DRIVER2_VREF = 5;  // ドライバ２
+    var LOW = 0;           // OFF
+    var HIGH = 1;          // ON
+    var SPEED_FAST = 255;
+    var SPEED_SLOW = 192;
+    var DEVICE_PORT = '';
+    var arduino = null;
+    var COMMAND_LIST = [];
+
+    //
+    // セットアップ
+    //
+    function setup()
+    {
+
+        for(i = 1; i < document.getElementsByClassName("btn").length; i++){
+            document.getElementsByClassName("btn")[i].disabled = true;
+        }
+
+        if (! document.arduino) {
+        alert('arduino plug-inをインストールして下さい');
+        return false;
+      }
+
+      if (document.getElementById('device').value == ''){
+          alert('デバイスポート名を入力して下さい');
+          return false;
+      }else{
+          DEVICE_PORT = document.getElementById('device').value;
+      }
+
+      if( arduino ){
+        arduino.close();
+        arduino = null;
+      }
+      arduino = document.arduino;
+
+      try{
+        arduino.open(DEVICE_PORT);
+      }
+      catch (e){
+        alert('arduinoとの接続に問題が有ります');
+        console.log(e);
+        arduino = null;
+        return false;
+      }
+
+      // pinMode(pin_number, true: OUTPUT, false:INPUT)
+      arduino.pinMode(DRIVER1_IN1, true);
+      arduino.pinMode(DRIVER1_IN2, true);
+      arduino.pinMode(DRIVER2_IN1, true);
+      arduino.pinMode(DRIVER2_IN2, true);
+
+      for(i = 1; i < document.getElementsByClassName("btn").length; i++){
+          document.getElementsByClassName("btn")[i].disabled = false;
+      }
+
+      COMMAND_LIST.speedSlow();
+      console.log('setup done');
+      return true;
+    }
+
+    //
+    // 接続確認
+    //
+    function is_connected(){
+      if (arduino == null && arduino == undefined){
+        return false;
+      }
+      console.log('connected');
+      return true;
+    }
+
+    //
+    // スピード（速い）
+    //
+    COMMAND_LIST.speedFast=function(){
+      arduino.analogWrite(DRIVER1_VREF, SPEED_FAST);
+      arduino.analogWrite(DRIVER2_VREF, SPEED_FAST);
+    }
+
+    //
+    // スピード（ゆっくり）
+    //
+    COMMAND_LIST.speedSlow=function(){
+      arduino.analogWrite(DRIVER1_VREF, SPEED_SLOW);
+      arduino.analogWrite(DRIVER2_VREF, SPEED_SLOW);
+    }
+
+    //
+    // 前進
+    //
+    COMMAND_LIST.forward=function()
+    {
+      if (!is_connected()) {return;}
+      console.log('forward');
+      arduino.digitalWrite(DRIVER1_IN1, HIGH);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, HIGH);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+    }
+
+    //
+    // 後退
+    //
+    COMMAND_LIST.backward=function()
+    {
+      if (!is_connected()) {return;}
+      console.log('backward');
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, HIGH);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+    }
+
+    //
+    // 左旋回
+    //
+    COMMAND_LIST.left=function()
+    {
+      if (!is_connected()) {return;}
+      console.log('left');
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, HIGH);
+      arduino.digitalWrite(DRIVER2_IN1, HIGH);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+    }
+
+    //
+    // 右旋回
+    //
+    COMMAND_LIST.right=function()
+    {
+      if (!is_connected()) {return;}
+      console.log('right');
+      arduino.digitalWrite(DRIVER1_IN1, HIGH);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+    }
+
+    //
+    // 停止
+    //
+    COMMAND_LIST.stop=function()
+    {
+      if (!is_connected()) {return;}
+      console.log('stop');
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+    }
+
+    // コマンドの種類
+    var COMMAND_TYPE ={
+      "forward": "進む",
+      "stop": "止まる",
+      "right": "右",
+      "left": "左",
+      "backward": "戻る",
+      "speedFast": "速く",
+      "speedSlow": "ゆっくり"
+    };
+    var commandIdx=0;
+    var commands = [];
+
+    /*
+    * 毎回document.querySelectorAllと書くと長いので
+    * jquery風に$(selector)でnodeを取得できるようにしている
+    */
+    function $(selector){
+      var elm = document.querySelectorAll(selector);
+      if( elm.length == 1)
+        return elm[0];
+      return elm;
+    }
+
+    /*
+    * 表示の初期化
+    */
+    function init(){
+      var root_node = $('#programs');
+      while (root_node.hasChildNodes()) {
+        root_node.removeChild(root_node.firstChild);
+      }
+      com_str=sessionStorage.getItem("commands");
+      console.log(com_str);
+      if(com_str && com_str.length>0){
+        var cmds = com_str.split(",");
+        for(var i=0;i<cmds.length;i++){
+          addCommand(cmds[i++], cmds[i]);
+        }
+      }
+      else{
+        addCommand();
+      }
+    }
+
+    /*
+    * コマンドを追加
+    * ctype: コマンドの種類。使えるコマンドは COMMAND_TYPE で定義されているもの
+    * time: 秒数
+    */
+    function addCommand(ctype, time){
+      ctype = (typeof(ctype)==='undefined')?null:ctype;
+      time = (typeof(time)==='undefined')?1:time;
+
+      // 秒数用input
+      var text_node = document.createElement("input");
+      text_node.setAttribute("class", "time");
+      text_node.setAttribute("value", time);
+      // "秒"表示
+      var label_node = document.createElement("label");
+      label_node.setAttribute("class", "time_label");
+      label_node.appendChild( document.createTextNode("秒") );
+      // コマンド選択
+      var select_node = document.createElement("select");
+      select_node.setAttribute("class", "ctype");
+      for(var key in COMMAND_TYPE){
+        var option = document.createElement("option");
+        option.setAttribute("value", key);
+        option.appendChild( document.createTextNode(COMMAND_TYPE[key]) );
+        if( ctype && ctype == key){
+        option.setAttribute("selected", true);
+      }
+        select_node.appendChild(option);
+      }
+      // 削除ボタン
+      var button_node = document.createElement("button");
+      button_node.setAttribute("class", "btn remove");
+      button_node.appendChild( document.createTextNode("消す") );
+      button_node.setAttribute("onClick", "removeCommand(this)");
+      // 親ノード
+      var wrapper_node = document.createElement("div");
+      wrapper_node.setAttribute("class", "wrapper");
+      wrapper_node.appendChild(text_node);
+      wrapper_node.appendChild(label_node);
+      wrapper_node.appendChild(select_node);
+      wrapper_node.appendChild(button_node);
+      $('#programs').appendChild(wrapper_node);
+    }
+
+    /*
+    * コマンドを削除
+    */
+    function removeCommand(elm){
+      var wrapper_node = elm.parentNode;
+      var root_node = wrapper_node.parentNode;
+      root_node.removeChild(wrapper_node);
+    }
+
+    /*
+    * プログラムを保存
+    */
+    function saveProgram(){
+      var cmd = getCommands();
+      var cmd_arr=Array();
+      for(var i=0;i<cmd.length;i++){
+        cmd_arr.push(cmd[i]['type']);
+        cmd_arr.push(cmd[i]['time']);
+      }
+      sessionStorage.setItem("commands", cmd_arr.toString());
+    }
+
+    /*
+    * プログラムを実行
+    */
+    function runProgram(){
+      saveProgram();
+      if( !setup() ) return;
+
+      commandIdx = 0;
+      commands = [];
+      commands = getCommands();
+      executeCommand();
+    }
+
+    /*
+    * １つのコマンドを実行
+    */
+    function executeCommand(){
+      highlightCommand();
+      if( commandIdx < commands.length){
+        COMMAND_LIST[commands[commandIdx]['type']]();
+        var time = 0
+        if (commands[commandIdx]['type'] != "speedFast" &&
+            commands[commandIdx]['type'] != "speedSlow"){
+          time = commands[commandIdx]['time']*1000;
+        }
+        console.log(commands[commandIdx]);
+        commandIdx++;
+        window.setTimeout("executeCommand()", time);
+      }
+      else{
+        COMMAND_LIST.stop();
+      }
+    }
+
+    /*
+    * プログラムを停止
+    */
+    function stopProgram(){
+      commandIdx = commands.length;
+      executeCommand();
+    }
+
+    /*
+    * プログラムのコマンドを取得する
+    */
+    function getCommands(){
+      var cmds=[];
+      var root_node = $('#programs');
+      for( var i = 0;i<root_node.childNodes.length;i++){
+        var wrapper_node = root_node.childNodes[i];
+        var time = wrapper_node.querySelector(".time").value;
+        var types = wrapper_node.querySelector(".ctype");
+        cmds[i] = {
+          'type': types.options[types.selectedIndex].value,
+          'time': time
+        };
+      }
+      return cmds;
+    }
+
+    /*
+    * 実行しているコマンドをハイライト表示
+    */
+    function highlightCommand(){
+      var elm = document.querySelectorAll(".active");
+      for(var i=0;i<elm.length;i++){
+        elm[i].setAttribute("class", "wrapper");
+      }
+      var root_node = $('#programs');
+      if( commandIdx < root_node.childNodes.length){
+        root_node.childNodes[commandIdx].setAttribute("class", "wrapper active");
+      }
+    }
+  </script>
+
+</head>
+<body onload="init()">
+  <div class="contents">
+    <div style="margin: 30px">
+        <p>デバイスポート名を入力して下さい。</p>
+       <input type="text" id="device" placeholder="デバイスポート名" value="/dev/cu.usbmodemfa131">
+    </div>
+    <div id="programs">
+    </div>
+    <div>
+      <button onClick="addCommand()" class="btn-add">追加</button>
+      <button onClick="saveProgram()" class="btn">保存</button>
+    </div>
+    <div>
+      <button onClick="runProgram()" class="btn-run">実行</button>
+      <button onClick="stopProgram()" class="btn-stop">停止</button>
+    </div>
+  </div>
+</body>
+</html>
