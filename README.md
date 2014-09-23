@@ -23,3 +23,7 @@ arduinoの制御周りはsimple_controler.htmlとほぼ同じ。
 
 特定のコマンドを入力することで、操作することが出来ます。
 画面から「help」と入力すると、利用できるコマンドが表示されます。
+
+# programmable_controler.html
+
+Arduinoへの操作を複数指定して、連続実行が出来るサンプル。
