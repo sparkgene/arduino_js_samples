@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset='utf-8'>
-  <title>simple controller</title>
+  <title>ステップ２</title>
   <style type="text/css">
   body {
     text-align: center;
@@ -11,10 +11,10 @@
     font-family: Arial;
     color: #ffffff;
     font-size: 20px;
-    padding: 5px 10px;
+    padding: 10px 20px 10px 20px;
     text-decoration: none;
-    width: 100px;
-    height: 40px;
+    width: 200px;
+    height: 50px;
   }
   .btn:hover {
     background-image: -moz-linear-gradient(top, #3cb0fd, #3498db);
@@ -23,51 +23,38 @@
   .btn[disabled] {
       background:  #aaaaaa;
   }
-  .btn-add {
-    background-image: -moz-linear-gradient(top, #bcc1ca, #9298a1);
-    font-family: Arial;
-    color: #ffffff;
-    font-size: 20px;
-    padding: 5px 10px;
-    text-decoration: none;
-    width: 100px;
-    height: 40px;
-  }
-  .btn-add:hover {
-    background-image: -moz-linear-gradient(top, #cdd5e3, #bcc1ca);
-    text-decoration: none;
-  }
+
   .btn-run {
     background-image: -moz-linear-gradient(top, #4bd222, #4aa12f);
     font-family: Arial;
     color: #ffffff;
     font-size: 20px;
-    padding: 5px 10px;
+    padding: 10px 20px 10px 20px;
     text-decoration: none;
-    width: 100px;
-    height: 40px;
+    width: 200px;
+    height: 50px;
   }
   .btn-run:hover {
     background-image: -moz-linear-gradient(top, #87f664, #4bd222);
     text-decoration: none;
   }
   .btn-stop {
-    background-image: -moz-linear-gradient(top, #262a32, #1f2022);
+    background-image: -moz-linear-gradient(top, #ee103a, #db2e56);
     font-family: Arial;
     color: #ffffff;
     font-size: 20px;
-    padding: 5px 10px;
+    padding: 10px 20px 10px 20px;
     text-decoration: none;
-    width: 100px;
-    height: 40px;
+    width: 200px;
+    height: 50px;
   }
   .btn-stop:hover {
-    background-image: -moz-linear-gradient(top, #434344, #262a32);
+    background-image: -moz-linear-gradient(top, #ee103a, #db2e56);
     text-decoration: none;
   }
 
   input {
-    font-size: 15px;
+    font-size: 20px;
   }
 
   /* コマンドコントロール用 */
@@ -86,6 +73,7 @@
     text-align: right;
   }
   select {
+    font-size: 20px;
     -moz-appearance: button;
     appearance: button;
     -moz-border-radius:5px;
@@ -103,6 +91,14 @@
   .remove:hover {
     background-image: -moz-linear-gradient(top, #ff0000, #ee103a);
     text-decoration: none;
+  }
+
+  .hr {
+      width: 60%;
+  }
+
+  .visibility_hidden {
+      visibility: hidden;
   }
 
   </style>
@@ -127,9 +123,9 @@
     function setup()
     {
 
-        for(i = 1; i < document.getElementsByClassName("btn").length; i++){
+        /*for(i = 1; i < document.getElementsByClassName("btn").length; i++){
             document.getElementsByClassName("btn")[i].disabled = true;
-        }
+        }*/
 
         if (! document.arduino) {
         alert('arduino plug-inをインストールして下さい');
@@ -165,9 +161,9 @@
       arduino.pinMode(DRIVER2_IN1, true);
       arduino.pinMode(DRIVER2_IN2, true);
 
-      for(i = 1; i < document.getElementsByClassName("btn").length; i++){
+      /*for(i = 1; i < document.getElementsByClassName("btn").length; i++){
           document.getElementsByClassName("btn")[i].disabled = false;
-      }
+      }*/
 
       COMMAND_LIST.speedSlow();
       console.log('setup done');
@@ -268,13 +264,16 @@
 
     // コマンドの種類
     var COMMAND_TYPE ={
-      "forward": "進む",
+      "forward": "前に進む",
       "stop": "止まる",
-      "right": "右",
-      "left": "左",
-      "backward": "戻る",
-      "speedFast": "速く",
-      "speedSlow": "ゆっくり"
+      "right": "右に回転する",
+      "left": "左に回転する",
+      "backward": "後ろに下がる"
+    };
+    // コマンドの種類
+    var SPEED_TYPE ={
+        "speedFast": "速く",
+        "speedSlow": "ゆっくり"
     };
     var commandIdx=0;
     var commands = [];
@@ -317,6 +316,7 @@
     * time: 秒数
     */
     function addCommand(ctype, time){
+
       ctype = (typeof(ctype)==='undefined')?null:ctype;
       time = (typeof(time)==='undefined')?1:time;
 
@@ -327,10 +327,10 @@
       // "秒"表示
       var label_node = document.createElement("label");
       label_node.setAttribute("class", "time_label");
-      label_node.appendChild( document.createTextNode("秒") );
+      label_node.appendChild( document.createTextNode("秒間") );
       // コマンド選択
-      var select_node = document.createElement("select");
-      select_node.setAttribute("class", "ctype");
+      var select_command_node = document.createElement("select");
+        select_command_node.setAttribute("class", "ctype");
       for(var key in COMMAND_TYPE){
         var option = document.createElement("option");
         option.setAttribute("value", key);
@@ -338,11 +338,28 @@
         if( ctype && ctype == key){
         option.setAttribute("selected", true);
       }
-        select_node.appendChild(option);
+          select_command_node.appendChild(option);
       }
+      // 速度選択
+      var select_speed_node = document.createElement("select");
+        select_speed_node.setAttribute("class", "speed");
+      for(var key in SPEED_TYPE){
+          var option = document.createElement("option");
+          option.setAttribute("value", key);
+          option.appendChild( document.createTextNode(SPEED_TYPE[key]) );
+          if( ctype && ctype == key){
+              option.setAttribute("selected", true);
+          }
+          select_speed_node.appendChild(option);
+      }
+
       // 削除ボタン
       var button_node = document.createElement("button");
-      button_node.setAttribute("class", "btn remove");
+      if(getCommands().length == 0){
+          button_node.setAttribute("class", "btn remove visibility_hidden");
+      }else{
+          button_node.setAttribute("class", "btn remove");
+      }
       button_node.appendChild( document.createTextNode("消す") );
       button_node.setAttribute("onClick", "removeCommand(this)");
       // 親ノード
@@ -350,7 +367,8 @@
       wrapper_node.setAttribute("class", "wrapper");
       wrapper_node.appendChild(text_node);
       wrapper_node.appendChild(label_node);
-      wrapper_node.appendChild(select_node);
+      wrapper_node.appendChild(select_speed_node);
+      wrapper_node.appendChild(select_command_node);
       wrapper_node.appendChild(button_node);
       $('#programs').appendChild(wrapper_node);
     }
@@ -396,12 +414,10 @@
     function executeCommand(){
       highlightCommand();
       if( commandIdx < commands.length){
+        COMMAND_LIST[commands[commandIdx]['speed']]();
         COMMAND_LIST[commands[commandIdx]['type']]();
-        var time = 0
-        if (commands[commandIdx]['type'] != "speedFast" &&
-            commands[commandIdx]['type'] != "speedSlow"){
-          time = commands[commandIdx]['time']*1000;
-        }
+        var time = 0;
+        time = commands[commandIdx]['time']*1000;
         console.log(commands[commandIdx]);
         commandIdx++;
         window.setTimeout("executeCommand()", time);
@@ -415,6 +431,7 @@
     * プログラムを停止
     */
     function stopProgram(){
+      if( !setup() ) return;
       commandIdx = commands.length;
       executeCommand();
     }
@@ -429,8 +446,10 @@
         var wrapper_node = root_node.childNodes[i];
         var time = wrapper_node.querySelector(".time").value;
         var types = wrapper_node.querySelector(".ctype");
+        var speed = wrapper_node.querySelector(".speed");
         cmds[i] = {
           'type': types.options[types.selectedIndex].value,
+          'speed': speed.options[speed.selectedIndex].value,
           'time': time
         };
       }
@@ -462,12 +481,13 @@
     <div id="programs">
     </div>
     <div>
-      <button onClick="addCommand()" class="btn-add">追加</button>
-      <button onClick="saveProgram()" class="btn">保存</button>
+      <button onClick="addCommand()" class="btn">プログラム追加</button>
+      <button onClick="saveProgram()" class="btn">プログラム保存</button>
     </div>
+      <hr class="hr">
     <div>
-      <button onClick="runProgram()" class="btn-run">実行</button>
-      <button onClick="stopProgram()" class="btn-stop">停止</button>
+      <button onClick="runProgram()" class="btn-run">動かしてみる</button>
+      <button onClick="stopProgram()" class="btn-stop">止める</button>
     </div>
   </div>
 </body>
