@@ -123,11 +123,7 @@
     function setup()
     {
 
-        /*for(i = 1; i < document.getElementsByClassName("btn").length; i++){
-            document.getElementsByClassName("btn")[i].disabled = true;
-        }*/
-
-        if (! document.arduino) {
+      if (! document.arduino) {
         alert('arduino plug-inをインストールして下さい');
         return false;
       }
@@ -160,10 +156,6 @@
       arduino.pinMode(DRIVER1_IN2, true);
       arduino.pinMode(DRIVER2_IN1, true);
       arduino.pinMode(DRIVER2_IN2, true);
-
-      /*for(i = 1; i < document.getElementsByClassName("btn").length; i++){
-          document.getElementsByClassName("btn")[i].disabled = false;
-      }*/
 
       COMMAND_LIST.speedSlow();
       console.log('setup done');
@@ -476,7 +468,7 @@
   <div class="contents">
     <div style="margin: 30px">
         <p>デバイスポート名を入力して下さい。</p>
-       <input type="text" id="device" placeholder="デバイスポート名" value="/dev/cu.usbmodemfa131">
+       <input type="text" id="device" placeholder="デバイスポート名" value="/dev/cu.usbmodem1411">
     </div>
     <div id="programs">
     </div>
