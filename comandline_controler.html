@@ -60,7 +60,7 @@
     //
     // セットアップ
     //
-    function setup()
+    function setup(devPort)
     {
       if (! document.arduino) {
         show_error('arduino plug-inをインストールして下さい');
@@ -73,7 +73,7 @@
       arduino = document.arduino;
       try{
 
-        arduino.open("/dev/cu.usbmodemfd121");
+        arduino.open(devPort);
       }
       catch (e){
         show_error("arduinoとの接続に問題が有ります");
@@ -229,14 +229,6 @@
   */
   function detect_function(command){
     switch (command){
-      case 'setup':
-        if (setup() ){
-          add_history('>> arduino connected successfully');
-        }
-        else{
-          show_error('コマンドの実行が出来ません');
-        }
-        break;
       case 'forward':
         if (forward() ){
           add_history('>> move forward');
@@ -300,8 +292,15 @@
         show_help();
         break;
       default :
-        if(command != '') show_error('コマンドが間違っています');
-        break;
+        if(command.indexOf('setup') != -1){
+            if (setup(command.substr(7))){
+                add_history('>> arduino connected successfully');
+            }else{
+                show_error('コマンドの実行が出来ません');
+            }
+        }else{
+            show_error('コマンドが間違っています');
+        }
     }
   }
 
@@ -317,11 +316,11 @@
   */
   function show_help(){
     add_history('usage:');
-    add_history('  setup     : arduinoと接続します');
+    add_history('  setup デバイスポート名     : arduinoと接続します');
     add_history('  forward   : 前に進みます');
     add_history('  backward  : 後ろに進みます');
-    add_history('  right     : 前に進みます');
-    add_history('  left      : 前に進みます');
+    add_history('  right     : 右に進みます');
+    add_history('  left      : 左に進みます');
     add_history('  stop      : 停止します');
     add_history('  fast     : 速度を上げます');
     add_history('  slow     : 速度を下げます');
