@@ -63,7 +63,7 @@
     function setup()
     {
       if (! document.arduino) {
-        add_history('arduino plug-inをインストールして下さい');
+        show_error('arduino plug-inをインストールして下さい');
         return false;
       }
       if( arduino ){
@@ -76,7 +76,7 @@
         arduino.open("/dev/cu.usbmodemfd121");
       }
       catch (e){
-        add_history("arduinoとの接続に問題が有ります")
+        show_error("arduinoとの接続に問題が有ります");
         console.log(e);
         arduino = null;
         return false;
@@ -96,7 +96,7 @@
     //
     function is_connected(){
       if (arduino == null && arduino == undefined){
-        alert('Setupをして下さい');
+        show_error('Setupを実行して下さい');
         return false;
       }
       console.log('connected');
@@ -176,6 +176,30 @@
       arduino.digitalWrite(DRIVER2_IN2, LOW);
       return true;
     }
+
+    //
+    // 高速化
+    //
+    function fast()
+    {
+        if (!is_connected()) {return false;}
+        console.log('fast');
+        arduino.analogWrite(DRIVER1_VREF, SPEED_FAST);
+        arduino.analogWrite(DRIVER2_VREF, SPEED_FAST);
+        return true;
+    }
+
+    //
+    // 低速化
+    //
+    function slow()
+    {
+        if (!is_connected()) {return false;}
+        console.log('slow');
+        arduino.analogWrite(DRIVER1_VREF, SPEED_SLOW);
+        arduino.analogWrite(DRIVER2_VREF, SPEED_SLOW);
+        return true;
+    }
   </script>
 
   <script type="text/javascript">
@@ -210,7 +234,7 @@
           add_history('>> arduino connected successfully');
         }
         else{
-          show_error();
+          show_error('コマンドの実行が出来ません');
         }
         break;
       case 'forward':
@@ -218,7 +242,7 @@
           add_history('>> move forward');
         }
         else{
-          show_error();
+          show_error('コマンドの実行が出来ません');
         }
         break;
       case 'backward':
@@ -226,7 +250,7 @@
           add_history('>> move backward');
         }
         else{
-          show_error();
+          show_error('コマンドの実行が出来ません');
         }
         break;
       case 'left':
@@ -234,7 +258,7 @@
           add_history('>> turn left');
         }
         else{
-          show_error();
+          show_error('コマンドの実行が出来ません');
         }
         break;
       case 'right':
@@ -242,7 +266,7 @@
           add_history('>> turn right');
         }
         else{
-          show_error();
+          show_error('コマンドの実行が出来ません');
         }
         break;
       case 'stop':
@@ -250,14 +274,33 @@
           add_history('>> stop');
         }
         else{
-          show_error();
+          show_error('コマンドの実行が出来ません');
         }
         break;
+      case 'fast':
+          if (fast() ){
+              add_history('>> speed fast');
+          }
+          else{
+              show_error('コマンドの実行が出来ません');
+          }
+          break;
+      case 'slow':
+          if (slow() ){
+              add_history('>> speed slow');
+          }
+          else{
+              show_error('コマンドの実行が出来ません');
+          }
+          break;
       case 'clear':
         init();
         break;
       case 'help':
         show_help();
+        break;
+      default :
+        if(command != '') show_error('コマンドが間違っています');
         break;
     }
   }
@@ -265,8 +308,8 @@
   /*
    * エラーメッセージを表示する
   */
-  function show_error(){
-    add_history('<span class="history_error">### command faild!</span>');
+  function show_error(text){
+    add_history('<span class="history_error">### '+text+'</span>');
   }
 
   /*
@@ -280,6 +323,8 @@
     add_history('  right     : 前に進みます');
     add_history('  left      : 前に進みます');
     add_history('  stop      : 停止します');
+    add_history('  fast     : 速度を上げます');
+    add_history('  slow     : 速度を下げます');
     add_history('  clear     : 画面をクリアします');
   }
 
