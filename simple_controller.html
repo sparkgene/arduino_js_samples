@@ -31,14 +31,10 @@
   <script type="text/javascript">
     var DRIVER1_IN1 = 6;   // ドライバ１
     var DRIVER1_IN2 = 7;   // ドライバ１
-    var DRIVER1_VREF = 3;  // ドライバ１
     var DRIVER2_IN1 = 8;   // ドライバ２
     var DRIVER2_IN2 = 9;   // ドライバ２
-    var DRIVER2_VREF = 5;  // ドライバ２
     var LOW = 0;           // OFF
     var HIGH = 1;          // ON
-    var SPEED_FAST = 255;
-    var SPEED_SLOW = 192;
     var DEVICE_PORT = '';
     var arduino = null;
 
@@ -105,17 +101,6 @@
       return true;
     }
 
-    function set_speed(){
-      element = document.getElementById('speed_fast');
-      if (element.checked){
-        arduino.analogWrite(DRIVER1_VREF, SPEED_FAST);
-        arduino.analogWrite(DRIVER2_VREF, SPEED_FAST);
-      }
-      else{
-        arduino.analogWrite(DRIVER1_VREF, SPEED_SLOW);
-        arduino.analogWrite(DRIVER2_VREF, SPEED_SLOW);
-      }
-    }
     //
     // 前進
     //
@@ -127,7 +112,6 @@
       arduino.digitalWrite(DRIVER1_IN2, LOW);
       arduino.digitalWrite(DRIVER2_IN1, HIGH);
       arduino.digitalWrite(DRIVER2_IN2, LOW);
-      set_speed();
     }
 
     //
@@ -141,7 +125,6 @@
       arduino.digitalWrite(DRIVER1_IN2, HIGH);
       arduino.digitalWrite(DRIVER2_IN1, LOW);
       arduino.digitalWrite(DRIVER2_IN2, HIGH);
-      set_speed();
     }
 
     //
@@ -155,7 +138,6 @@
       arduino.digitalWrite(DRIVER1_IN2, HIGH);
       arduino.digitalWrite(DRIVER2_IN1, HIGH);
       arduino.digitalWrite(DRIVER2_IN2, LOW);
-      set_speed();
     }
 
     //
@@ -169,7 +151,6 @@
       arduino.digitalWrite(DRIVER1_IN2, LOW);
       arduino.digitalWrite(DRIVER2_IN1, LOW);
       arduino.digitalWrite(DRIVER2_IN2, HIGH);
-      set_speed();
     }
 
     //
@@ -207,11 +188,6 @@
     </div>
     <div style="margin: 30px">
       <button onClick="stop()" class="btn" disabled>停止</button>
-    </div>
-    <div style="margin: 30px">
-      <p>速度を変える</p>
-      <label><input type="radio" id="speed_fast" name="speed">高速</label>
-      <label><input type="radio" id="speed_slow" name="speed" checked>低速</label>
     </div>
   </div>
 </body>

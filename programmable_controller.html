@@ -105,14 +105,10 @@
   <script type="text/javascript">
     var DRIVER1_IN1 = 6;   // ドライバ１
     var DRIVER1_IN2 = 7;   // ドライバ１
-    var DRIVER1_VREF = 3;  // ドライバ１
     var DRIVER2_IN1 = 8;   // ドライバ２
     var DRIVER2_IN2 = 9;   // ドライバ２
-    var DRIVER2_VREF = 5;  // ドライバ２
     var LOW = 0;           // OFF
     var HIGH = 1;          // ON
-    var SPEED_FAST = 255;
-    var SPEED_SLOW = 192;
     var DEVICE_PORT = '';
     var arduino = null;
     var COMMAND_LIST = [];
@@ -157,7 +153,6 @@
       arduino.pinMode(DRIVER2_IN1, true);
       arduino.pinMode(DRIVER2_IN2, true);
 
-      COMMAND_LIST.speedSlow();
       console.log('setup done');
       return true;
     }
@@ -171,22 +166,6 @@
       }
       console.log('connected');
       return true;
-    }
-
-    //
-    // スピード（速い）
-    //
-    COMMAND_LIST.speedFast=function(){
-      arduino.analogWrite(DRIVER1_VREF, SPEED_FAST);
-      arduino.analogWrite(DRIVER2_VREF, SPEED_FAST);
-    }
-
-    //
-    // スピード（ゆっくり）
-    //
-    COMMAND_LIST.speedSlow=function(){
-      arduino.analogWrite(DRIVER1_VREF, SPEED_SLOW);
-      arduino.analogWrite(DRIVER2_VREF, SPEED_SLOW);
     }
 
     //
@@ -262,11 +241,6 @@
       "left": "左に回転する",
       "backward": "後ろに下がる"
     };
-    // コマンドの種類
-    var SPEED_TYPE ={
-        "speedFast": "速く",
-        "speedSlow": "ゆっくり"
-    };
     var commandIdx=0;
     var commands = [];
 
@@ -294,7 +268,7 @@
       if(com_str && com_str.length>0){
         var cmds = com_str.split(",");
         for(var i=0;i<cmds.length;i++){
-          addCommand(cmds[i++], cmds[i++], cmds[i]);
+          addCommand(cmds[i++], cmds[i]);
         }
       }
       else{
@@ -311,7 +285,6 @@
 
       ctype = (typeof(ctype)==='undefined')?null:ctype;
       time = (typeof(time)==='undefined')?1:time;
-      speed = (typeof(speed)==='undefined')?1:speed;
 
       // 秒数用input
       var text_node = document.createElement("input");
@@ -333,18 +306,6 @@
       }
           select_command_node.appendChild(option);
       }
-      // 速度選択
-      var select_speed_node = document.createElement("select");
-        select_speed_node.setAttribute("class", "speed");
-      for(var key in SPEED_TYPE){
-          var option = document.createElement("option");
-          option.setAttribute("value", key);
-          option.appendChild( document.createTextNode(SPEED_TYPE[key]) );
-          if( speed && speed == key){
-              option.setAttribute("selected", true);
-          }
-          select_speed_node.appendChild(option);
-      }
 
       // 削除ボタン
       var button_node = document.createElement("button");
@@ -360,7 +321,6 @@
       wrapper_node.setAttribute("class", "wrapper");
       wrapper_node.appendChild(text_node);
       wrapper_node.appendChild(label_node);
-      wrapper_node.appendChild(select_speed_node);
       wrapper_node.appendChild(select_command_node);
       wrapper_node.appendChild(button_node);
       $('#programs').appendChild(wrapper_node);
@@ -384,7 +344,6 @@
       for(var i=0;i<cmd.length;i++){
         cmd_arr.push(cmd[i]['type']);
         cmd_arr.push(cmd[i]['time']);
-        cmd_arr.push(cmd[i]['speed']);
       }
       localStorage.setItem("commands", cmd_arr.toString());
     }
@@ -408,7 +367,6 @@
     function executeCommand(){
       highlightCommand();
       if( commandIdx < commands.length){
-        COMMAND_LIST[commands[commandIdx]['speed']]();
         COMMAND_LIST[commands[commandIdx]['type']]();
         var time = 0;
         time = commands[commandIdx]['time']*1000;
@@ -440,10 +398,8 @@
         var wrapper_node = root_node.childNodes[i];
         var time = wrapper_node.querySelector(".time").value;
         var types = wrapper_node.querySelector(".ctype");
-        var speed = wrapper_node.querySelector(".speed");
         cmds[i] = {
           'type': types.options[types.selectedIndex].value,
-          'speed': speed.options[speed.selectedIndex].value,
           'time': time
         };
       }
