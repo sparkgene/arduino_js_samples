@@ -47,14 +47,10 @@
   <script type="text/javascript">
     var DRIVER1_IN1 = 6;   // ドライバ１
     var DRIVER1_IN2 = 7;   // ドライバ１
-    var DRIVER1_VREF = 3;  // ドライバ１
     var DRIVER2_IN1 = 8;   // ドライバ２
     var DRIVER2_IN2 = 9;   // ドライバ２
-    var DRIVER2_VREF = 5;  // ドライバ２
     var LOW = 0;           // OFF
     var HIGH = 1;          // ON
-    var SPEED_FAST = 255;
-    var SPEED_SLOW = 192;
     var arduino = null;
 
     //
@@ -103,10 +99,6 @@
       return true;
     }
 
-    function set_speed(){
-      arduino.analogWrite(DRIVER1_VREF, SPEED_SLOW);
-      arduino.analogWrite(DRIVER2_VREF, SPEED_SLOW);
-    }
     //
     // 前進
     //
@@ -175,30 +167,6 @@
       arduino.digitalWrite(DRIVER2_IN1, LOW);
       arduino.digitalWrite(DRIVER2_IN2, LOW);
       return true;
-    }
-
-    //
-    // 高速化
-    //
-    function fast()
-    {
-        if (!is_connected()) {return false;}
-        console.log('fast');
-        arduino.analogWrite(DRIVER1_VREF, SPEED_FAST);
-        arduino.analogWrite(DRIVER2_VREF, SPEED_FAST);
-        return true;
-    }
-
-    //
-    // 低速化
-    //
-    function slow()
-    {
-        if (!is_connected()) {return false;}
-        console.log('slow');
-        arduino.analogWrite(DRIVER1_VREF, SPEED_SLOW);
-        arduino.analogWrite(DRIVER2_VREF, SPEED_SLOW);
-        return true;
     }
   </script>
 
@@ -269,22 +237,6 @@
           show_error('コマンドの実行が出来ません');
         }
         break;
-      case 'fast':
-          if (fast() ){
-              add_history('>> speed fast');
-          }
-          else{
-              show_error('コマンドの実行が出来ません');
-          }
-          break;
-      case 'slow':
-          if (slow() ){
-              add_history('>> speed slow');
-          }
-          else{
-              show_error('コマンドの実行が出来ません');
-          }
-          break;
       case 'clear':
         init();
         break;
@@ -322,8 +274,6 @@
     add_history('  right     : 右に進みます');
     add_history('  left      : 左に進みます');
     add_history('  stop      : 停止します');
-    add_history('  fast     : 速度を上げます');
-    add_history('  slow     : 速度を下げます');
     add_history('  clear     : 画面をクリアします');
   }
 
