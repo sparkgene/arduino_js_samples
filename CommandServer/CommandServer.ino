@@ -42,28 +42,24 @@ void loop() {
         int pin = readInt(2);
         int value = readInt(1);
         digitalWrite(pin, value);
-        delay(100);
         break;
       }
       case 'D': {
         int pin = readInt(2);
         int result = digitalRead(pin);
         Serial.print(result);
-        delay(100);
         break;
       }
       case 'a': {
         int pin = readInt(2);
         int value = readInt(3);
         analogWrite(pin, value);
-        delay(100);
         break;
       }
       case 'A': {
         int pin = readInt(2);
         int result = analogRead(pin);
         Serial.print(result);
-        delay(100);
         break;
       }
       case 'p': {
