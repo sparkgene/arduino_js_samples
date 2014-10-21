@@ -37,6 +37,8 @@
     var HIGH = 1;          // ON
     var DEVICE_PORT = '';
     var arduino = null;
+    var DELAY_TIME = 500; // msec
+    var lock = false;
 
     //
     // セットアップ
@@ -106,12 +108,17 @@
     //
     function forward()
     {
-      if (!is_connected()) {return;}
+      if (!is_connected() || lock) {return;}
       console.log('forward');
-      arduino.digitalWrite(DRIVER1_IN1, HIGH);
-      arduino.digitalWrite(DRIVER1_IN2, LOW);
-      arduino.digitalWrite(DRIVER2_IN1, HIGH);
-      arduino.digitalWrite(DRIVER2_IN2, LOW);
+      lock = true;
+      stop();
+      setTimeout(function(){
+        arduino.digitalWrite(DRIVER1_IN1, HIGH);
+        arduino.digitalWrite(DRIVER1_IN2, LOW);
+        arduino.digitalWrite(DRIVER2_IN1, HIGH);
+        arduino.digitalWrite(DRIVER2_IN2, LOW);
+        lock = false;
+      }, DELAY_TIME);
     }
 
     //
@@ -119,12 +126,17 @@
     //
     function backward()
     {
-      if (!is_connected()) {return;}
+      if (!is_connected() || lock) {return;}
       console.log('backward');
-      arduino.digitalWrite(DRIVER1_IN1, LOW);
-      arduino.digitalWrite(DRIVER1_IN2, HIGH);
-      arduino.digitalWrite(DRIVER2_IN1, LOW);
-      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+      lock = true;
+      stop();
+      setTimeout(function(){
+        arduino.digitalWrite(DRIVER1_IN1, LOW);
+        arduino.digitalWrite(DRIVER1_IN2, HIGH);
+        arduino.digitalWrite(DRIVER2_IN1, LOW);
+        arduino.digitalWrite(DRIVER2_IN2, HIGH);
+        lock = false;
+      }, DELAY_TIME);
     }
 
     //
@@ -132,12 +144,17 @@
     //
     function left()
     {
-      if (!is_connected()) {return;}
+      if (!is_connected() || lock) {return;}
       console.log('left');
-      arduino.digitalWrite(DRIVER1_IN1, LOW);
-      arduino.digitalWrite(DRIVER1_IN2, HIGH);
-      arduino.digitalWrite(DRIVER2_IN1, HIGH);
-      arduino.digitalWrite(DRIVER2_IN2, LOW);
+      lock = true;
+      stop();
+      setTimeout(function(){
+        arduino.digitalWrite(DRIVER1_IN1, LOW);
+        arduino.digitalWrite(DRIVER1_IN2, HIGH);
+        arduino.digitalWrite(DRIVER2_IN1, HIGH);
+        arduino.digitalWrite(DRIVER2_IN2, LOW);
+        lock = false;
+      }, DELAY_TIME);
     }
 
     //
@@ -145,12 +162,17 @@
     //
     function right()
     {
-      if (!is_connected()) {return;}
+      if (!is_connected() || lock) {return;}
       console.log('right');
-      arduino.digitalWrite(DRIVER1_IN1, HIGH);
-      arduino.digitalWrite(DRIVER1_IN2, LOW);
-      arduino.digitalWrite(DRIVER2_IN1, LOW);
-      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+      lock = true;
+      stop();
+      setTimeout(function(){
+        arduino.digitalWrite(DRIVER1_IN1, HIGH);
+        arduino.digitalWrite(DRIVER1_IN2, LOW);
+        arduino.digitalWrite(DRIVER2_IN1, LOW);
+        arduino.digitalWrite(DRIVER2_IN2, HIGH);
+        lock = false;
+      }, DELAY_TIME);
     }
 
     //
