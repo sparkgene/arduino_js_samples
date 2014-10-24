@@ -1,0 +1,325 @@
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>Leap motion Controller</title>
+  <style type="text/css">
+  body {
+    text-align: center;
+  }
+  .btn {
+    background-image: -moz-linear-gradient(top, #3498db, #2980b9);
+    font-family: Arial;
+    color: #ffffff;
+    font-size: 20px;
+    padding: 10px 20px 10px 20px;
+    text-decoration: none;
+    width: 180px;
+    height: 50px;
+  }
+  .btn:hover {
+    background-image: -moz-linear-gradient(top, #3cb0fd, #3498db);
+    text-decoration: none;
+  }
+  .btn[disabled] {
+      background:  #aaaaaa;
+  }
+
+  input {
+    font-size: 15px;
+  }
+  </style>
+  <script src="./leap-0.6.3.js"></script>
+</head>
+<body>
+  <div class="contents">
+    <div style="margin: 30px">
+        <p>デバイスポート名を入力してセットアップボタンを押して下さい。</p>
+       <input type="text" id="device" placeholder="デバイスポート名" value="/dev/cu.usbmodem1411">
+    </div>
+    <div style="margin: 30px">
+      <button type="button" onClick="setup()" class="btn">セットアップ</button>
+    </div>
+    <div style="margin: 30px">
+      <button type="button" onClick="stop()" class="btn">ストップ</button>
+    </div>
+  </div>
+
+  <div id="status"></div>
+  <div id="out"></div>
+
+<script type="text/javascript">
+  var paused = false;
+  window.onkeypress = function(e) {
+    if (e.charCode == 32) {
+      if (paused == false) {
+        paused = true;
+        stop();
+      } else {
+        paused = false;
+      }
+    }
+  };
+  var controller = new Leap.Controller({enableGestures: true});
+  var FRAME_COUNT = 10;
+  var frame_counter = 0;
+  var motion = "";
+  function is_detected(type){
+    if( motion != type){
+      console.log("motion changed "+motion+" to "+type+" "+frame_counter);
+      motion = type;
+      frame_counter = 1;
+      return false;
+    }
+    frame_counter++;
+    if( frame_counter < FRAME_COUNT){
+      return false;
+    }
+    console.log("motion "+type+" "+frame_counter);
+    return true;
+  }
+
+  function show_status(status){
+    console.log(status);
+    document.getElementById('status').innerHTML = "<strong>"+status+"</strong>";
+  }
+
+  controller.loop(function(frame) {
+    latestFrame = frame;
+    if (paused) {
+      frame_counter = 1;
+      show_status("STOP");
+      stop();
+      return;
+    }
+    document.getElementById('status').innerHTML = "";
+
+    var str = "";
+    for (var i in frame.handsMap) {
+      var hand = frame.handsMap[i];
+      if( hand.pitch() > 0.2 ){
+        if( ! is_detected("backward") ) break;
+        show_status("MOVE backward");
+        backward();
+      }
+      else if( hand.pitch() < -0.2 ){
+        if( ! is_detected("forward") ) break;
+        show_status("MOVE forward");
+        forward();
+      }
+      else if( hand.roll() < -0.4 ){
+        if( ! is_detected("right") ) break;
+        show_status("TURN right");
+        right();
+      }
+      else if( hand.roll() > 0.4 ){
+        if( ! is_detected("left") ) break;
+        show_status("TURN left");
+        left();
+      }
+      else{
+        if( ! is_detected("stop") ) break;
+        show_status("STOP");
+        stop();
+      }
+      str += "<p>" +
+        "<strong>Roll:</strong> " + hand.roll() +
+        "<br/><strong>Pitch:</strong> " + hand.pitch() +
+        "</p>";
+    }
+    document.getElementById('out').innerHTML = str;
+  });
+  controller.on('ready', function() {
+    console.log("ready");
+  });
+  controller.on('connect', function() {
+    console.log("connect");
+  });
+  controller.on('disconnect', function() {
+    console.log("disconnect");
+  });
+  controller.on('focus', function() {
+    frame_counter = 0;
+    motion="";
+    console.log("focus");
+  });
+  controller.on('blur', function() {
+    console.log("blur");
+  });
+  controller.on('streamingStarted', function() {
+    console.log("streamingStarted");
+  });
+  controller.on('streamingStopped', function() {
+    console.log("streamingStopped");
+  });
+</script>
+<script type="text/javascript">
+  var DRIVER1_IN1 = 6;   // ドライバ１
+  var DRIVER1_IN2 = 7;   // ドライバ１
+  var DRIVER2_IN1 = 8;   // ドライバ２
+  var DRIVER2_IN2 = 9;   // ドライバ２
+  var LOW = 0;           // OFF
+  var HIGH = 1;          // ON
+  var DEVICE_PORT = '';
+  var arduino = null;
+  var DELAY_TIME = 500; // msec
+  var lock = false;
+  var arduino_status = "";
+
+  //
+  // セットアップ
+  //
+  function setup()
+  {
+
+    for(i = 1; i < document.getElementsByClassName("btn").length; i++){
+        document.getElementsByClassName("btn")[i].disabled = true;
+    }
+
+    if (! document.arduino) {
+      alert('arduino plug-inをインストールして下さい');
+      return;
+    }
+
+    if (document.getElementById('device').value == ''){
+        alert('デバイスポート名を入力して下さい');
+        return;
+    }else{
+        DEVICE_PORT = document.getElementById('device').value;
+    }
+
+    if( arduino ){
+      arduino.close();
+      arduino = null;
+    }
+    arduino = document.arduino;
+
+    try{
+      arduino.open(DEVICE_PORT);
+    }
+    catch (e){
+      alert('arduinoとの接続に問題が有ります');
+      console.log(e);
+      arduino = null;
+      return;
+    }
+
+    // pinMode(pin_number, true: OUTPUT, false:INPUT)
+    arduino.pinMode(DRIVER1_IN1, true);
+    arduino.pinMode(DRIVER1_IN2, true);
+    arduino.pinMode(DRIVER2_IN1, true);
+    arduino.pinMode(DRIVER2_IN2, true);
+
+    for(i = 1; i < document.getElementsByClassName("btn").length; i++){
+        document.getElementsByClassName("btn")[i].disabled = false;
+    }
+
+    console.log('setup done');
+  }
+
+  //
+  // 接続確認
+  //
+  function is_connected(){
+    if (arduino == null && arduino == undefined){
+      alert('セットアップを実行して下さい');
+      return false;
+    }
+    console.log('connected');
+    return true;
+  }
+
+  //
+  // 前進
+  //
+  function forward()
+  {
+    if (!is_connected() || lock) return;
+    if( arduino_status == "forward" ) return;
+    arduino_status = "forward";
+    lock = true;
+    stop();
+    setTimeout(function(){
+      console.log("forward");
+      arduino.digitalWrite(DRIVER1_IN1, HIGH);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, HIGH);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+      lock = false;
+    }, DELAY_TIME);
+  }
+
+  //
+  // 後退
+  //
+  function backward()
+  {
+    if (!is_connected() || lock) {return;}
+    if( arduino_status == "backward" ) return;
+    arduino_status = "backward";
+    lock = true;
+    stop();
+    setTimeout(function(){
+      console.log("backward");
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, HIGH);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+      lock = false;
+    }, DELAY_TIME);
+  }
+
+  //
+  // 左旋回
+  //
+  function left()
+  {
+    if (!is_connected() || lock) {return;}
+    if( arduino_status == "left" ) return;
+    arduino_status = "left";
+    lock = true;
+    stop();
+    setTimeout(function(){
+      console.log("left");
+      arduino.digitalWrite(DRIVER1_IN1, LOW);
+      arduino.digitalWrite(DRIVER1_IN2, HIGH);
+      arduino.digitalWrite(DRIVER2_IN1, HIGH);
+      arduino.digitalWrite(DRIVER2_IN2, LOW);
+      lock = false;
+    }, DELAY_TIME);
+  }
+
+  //
+  // 右旋回
+  //
+  function right()
+  {
+    if (!is_connected() || lock) {return;}
+    if( arduino_status == "right" ) return;
+    arduino_status = "right";
+    lock = true;
+    stop();
+    setTimeout(function(){
+      console.log("right");
+      arduino.digitalWrite(DRIVER1_IN1, HIGH);
+      arduino.digitalWrite(DRIVER1_IN2, LOW);
+      arduino.digitalWrite(DRIVER2_IN1, LOW);
+      arduino.digitalWrite(DRIVER2_IN2, HIGH);
+      lock = false;
+    }, DELAY_TIME);
+  }
+
+  //
+  // 停止
+  //
+  function stop()
+  {
+    if (!is_connected()) {return;}
+    console.log("stop");
+    arduino.digitalWrite(DRIVER1_IN1, LOW);
+    arduino.digitalWrite(DRIVER1_IN2, LOW);
+    arduino.digitalWrite(DRIVER2_IN1, LOW);
+    arduino.digitalWrite(DRIVER2_IN2, LOW);
+  }
+</script>
+</body>
+</html>
